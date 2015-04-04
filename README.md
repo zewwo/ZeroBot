@@ -14,6 +14,9 @@ Current custom functions created :
     CheckTwitch - Check stream availability on Twitch.TV
     CheckHitbox - Check stream availablity on Hitbox.TV
     LoadFollowers - Load all followers from a text file
+    ProgressionCheck - Output a WoW Character's raid progression in the latest raid
+    TopFiveGames - Output the current top five games in terms of viewers on Twitch.TV
+    TopFiveChannels - Output the top five channels of a game in terms of viewers on Twitch.TV
 --
 
 APIs Used in this project:
