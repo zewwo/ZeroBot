@@ -45,7 +45,6 @@ namespace zwoBot.Classes
             this.realm = realm;
         }
 
-
         public string ProgressionCheck()
         {
             string output = null;

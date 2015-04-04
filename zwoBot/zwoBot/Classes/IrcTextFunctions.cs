@@ -32,10 +32,6 @@ namespace zwoBot.Classes
         {
             string[] message = msg.Split(' ');
 
-            // List of commands
-            if (userSent[0].ToString() == "b" && userSent[1].ToString().ToLower() == "i" && userSent[2].ToString().ToLower() == "b")
-                Bibby();
-
             switch (message.Length)
             {
                 case 1:
