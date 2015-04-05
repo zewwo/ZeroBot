@@ -99,8 +99,11 @@ namespace zwoBot.Classes
                 for (int i = 2; i < message.Length; ++i)
                     realm += message[i] + " ";
 
-                Warcraft warcraft = new Warcraft(message[1], realm);
-                _client.SendMessage(_channel, warcraft.ProgressionCheck());
+                if (realm.Trim() != String.Empty)
+                {
+                    Warcraft warcraft = new Warcraft(message[1], realm);
+                    _client.SendMessage(_channel, warcraft.ProgressionCheck());
+                }
             }
             else if (message[0] == "!game")
             {
@@ -108,11 +111,14 @@ namespace zwoBot.Classes
                 for (int i = 1; i < message.Length; ++i)
                     game += message[i] + " ";
 
-                Twitch twitch = new Twitch(null);
-                var channel = twitch.TopFiveChannels(game);
+                if (game.Trim() != String.Empty)
+                {
+                    Twitch twitch = new Twitch(null);
+                    var channel = twitch.TopFiveChannels(game);
 
-                foreach (string n in channel)
-                    _client.SendMessage(_channel, n);
+                    foreach (string n in channel)
+                        _client.SendMessage(_channel, n);
+                }
             }
         }
         

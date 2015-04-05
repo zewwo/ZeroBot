@@ -197,7 +197,7 @@ namespace zwoBot.Classes
             }
             catch (Exception e)
             {
-                topGames.Add("TopFiveGames : " + e.Message);
+                topGames.Add("Games do not exist.");
             }
 
             return topGames;
@@ -227,7 +227,7 @@ namespace zwoBot.Classes
             }
             catch (Exception e)
             {
-                topChannels.Add("TopFiveChannels : " + e.Message);
+                topChannels.Add(game + " does not exist.");
             }
 
             return topChannels;
