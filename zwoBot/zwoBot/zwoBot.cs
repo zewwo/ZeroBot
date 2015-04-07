@@ -181,9 +181,15 @@ namespace zwoBot
         private void client_ChannelMessage(object sender, ChannelMessageEventArgs e)
         {
             AddToChat("<" + e.From + "> : " + e.Message);
-            IrcTextFunctions textFunctions = new IrcTextFunctions(_client, _channel, _following);
 
-            textFunctions.ChatFunctions(e.Message, e.From);
+            if (DateTime.Today.DayOfWeek == DayOfWeek.Monday 
+                || DateTime.Today.DayOfWeek == DayOfWeek.Wednesday 
+                || DateTime.Today.DayOfWeek == DayOfWeek.Friday 
+                || DateTime.Today.DayOfWeek == DayOfWeek.Sunday)
+            {
+                IrcTextFunctions textFunctions = new IrcTextFunctions(_client, _channel, _following);
+                textFunctions.ChatFunctions(e.Message, e.From);
+            }
         }
 
         // Add all server messages to the chat
