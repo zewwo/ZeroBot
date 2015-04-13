@@ -20,13 +20,6 @@ namespace zwoBot.Classes
         {
             this.name = name;
         }
-
-        public BlizzardInfo(string name, string bClass, string level)
-        {
-            this.name = name;
-            bclass = bClass;
-            this.level = level;
-        }
     }
 
     class Warcraft : BlizzardInfo
@@ -35,12 +28,6 @@ namespace zwoBot.Classes
        
         public Warcraft(string name, string realm)
             : base(name)
-        {
-            this.realm = realm;
-        }
-
-        public Warcraft(string name, string bClass, string level, string realm)
-            : base(name, bClass, level)
         {
             this.realm = realm;
         }
@@ -92,6 +79,46 @@ namespace zwoBot.Classes
             catch (Exception e)
             {
                 output = "Character or Realm does not exist.";
+            }
+
+            return output;
+        }
+    }
+
+    class Diablo : BlizzardInfo
+    {
+        public Diablo(string name)
+            : base(name.Replace('#', '-')) { }
+
+        public string ParagonChecks()
+        {
+            string output = null;
+            string locale = "en_US";
+
+            string api = "https://us.api.battle.net/d3/profile/" + name + "/?locale=" + locale + "&apikey=" + BLIZZARD_API_KEY;
+            WebClient web = new WebClient();
+
+            try
+            {
+                string dataInfo = web.DownloadString(api);
+                var data = JObject.Parse(dataInfo);
+
+                output = data["battleTag"].ToString()
+                    + " : Non-Season Paragon (" + data["paragonLevel"].ToString()
+                    + ") - Latest Season Paragon (" + data["paragonLevelSeason"].ToString() + ")";
+                output += ", Last Character Played : ";
+
+                for (int i = 0; i < data["heroes"].Count(); ++i)
+                {
+                    if (data["heroes"][i]["id"].ToString() == data["lastHeroPlayed"].ToString())
+                        output += data["heroes"][0]["name"].ToString() 
+                            + " (" + data["heroes"][i]["class"].ToString() 
+                            + ", " + data["heroes"][i]["level"].ToString() + ")";
+                }
+            }
+            catch (Exception e)
+            {
+                output = name + "'s data does not exist.";
             }
 
             return output;

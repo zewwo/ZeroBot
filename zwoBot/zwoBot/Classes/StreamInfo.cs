@@ -206,9 +206,9 @@ namespace zwoBot.Classes
         public List<string> TopFiveChannels(string game)
         {
             List<string> topChannels = new List<string>();
-            game = game.Remove(game.Length - 1, 1);
-            game = WebUtility.UrlEncode(game);
-            string api = "https://api.twitch.tv/kraken/streams?game=" + game;
+            string urlGame = game.Remove(game.Length - 1, 1);
+            urlGame = WebUtility.UrlEncode(urlGame);
+            string api = "https://api.twitch.tv/kraken/streams?game=" + urlGame;
             WebClient web = new WebClient();
 
             try

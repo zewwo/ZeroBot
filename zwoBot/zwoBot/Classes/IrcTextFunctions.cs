@@ -89,10 +89,19 @@ namespace zwoBot.Classes
             // Unfollow a channel
             else if (message[0] == "!unfollow" && userSent == "zwo")
                 Channel(message[1], false);
+
+            if (message[0] == "!paragon")
+            {
+                Diablo diablo = new Diablo(message[1]);
+                _client.SendMessage(_channel, diablo.ParagonChecks());
+            }
         }
 
         private void MessageX(string[] message, string userSent)
         {
+            //if (message[0] == "!mute" && userSent != "whereIsBib")
+            //    _client.SendMessage(_channel, "!mute");
+
             if (message[0] == "!wowprogress")
             {
                 string realm = "";

@@ -6,9 +6,9 @@
 // zwoBot.resx
 // Description: Connect to an IRC server and perform various functions
 //              based on the IRC chat.
-// Version: 1.8
+// Version: 1.9
 // Date Created: 02.28.15
-// Updated Date: 03.28.15
+// Updated Date: 04.13.15
 // Author: Kevin Nguyen 
 //*********************************************************************
 
@@ -69,7 +69,7 @@ namespace zwoBot
             }
 
             _client = new IrcClient(_server);
-            _client.Nick = "whereIsBib";
+            _client.Nick = "bibbyIsBack";
             _client.AltNick = "zwoBawt";
 
             ChannelEvents();
@@ -143,7 +143,7 @@ namespace zwoBot
         private void client_OnConnect(object sender, EventArgs e)
         {
             _client.JoinChannel(_channel);
-            
+            _client.SendMessage(_channel, "!mute");
             OnLoadCheck();
         }
 
@@ -182,14 +182,8 @@ namespace zwoBot
         {
             AddToChat("<" + e.From + "> : " + e.Message);
 
-            if (DateTime.Today.DayOfWeek == DayOfWeek.Monday 
-                || DateTime.Today.DayOfWeek == DayOfWeek.Wednesday 
-                || DateTime.Today.DayOfWeek == DayOfWeek.Friday 
-                || DateTime.Today.DayOfWeek == DayOfWeek.Sunday)
-            {
-                IrcTextFunctions textFunctions = new IrcTextFunctions(_client, _channel, _following);
-                textFunctions.ChatFunctions(e.Message, e.From);
-            }
+            IrcTextFunctions textFunctions = new IrcTextFunctions(_client, _channel, _following);
+            textFunctions.ChatFunctions(e.Message, e.From);
         }
 
         // Add all server messages to the chat
@@ -275,7 +269,7 @@ namespace zwoBot
                         if (ch[i] is Twitch)
                         {
                             var channel = ch[i] as Twitch;
-                            msg =  channel.CheckFollowers(ref offlineTwitch, ref ch);
+                            msg = channel.CheckFollowers(ref offlineTwitch, ref ch);
                         }
                         else if (ch[i] is HitBox)
                         {
