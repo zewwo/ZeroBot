@@ -22,7 +22,6 @@ namespace zwoBot.Classes
         protected List<string> msg = new List<string>();
         protected bool isOnlineMsg;
         protected bool bootUp;
-        public bool wrongType { get; protected set; }
 
         public StreamInfo(string channelName)
         {
@@ -91,22 +90,24 @@ namespace zwoBot.Classes
                                 msg[1] += result.Minutes + " minutes " + result.Seconds + " seconds" + " ) ";
                         }
                     }
-
-                    foreach (string n in msg)
-                        _client.SendMessage(ircChannel, n);
                 }
 
                 Success = true;
             }
             catch
             {
-
+                if (!follow)
+                    // If someone placed an unknown channel for both Twitch + Hitbox
+                    msg.Add(channelName + " 4 does not exist1.");
             }
+
+            foreach (string n in msg)
+                _client.SendMessage(ircChannel, n);
 
             return Success;
         }
 
-        public List<string> CheckFollowers(ref string offlineTwitch, ref List<StreamInfo> ch)
+        public List<string> CheckFollowers(ref string offline)
         {
             string api = "https://api.twitch.tv/kraken/streams/" + channelName;
             WebClient web = new WebClient();
@@ -157,7 +158,7 @@ namespace zwoBot.Classes
                         if (!bootUp)
                         {
                             // Consolidate all offline streams in a single string
-                            offlineTwitch += " " + channelName;
+                            offline += " " + channelName;
                             bootUp = true;
                         }
                         else
@@ -167,8 +168,7 @@ namespace zwoBot.Classes
             }
             catch
             {
-                ch.Add(new HitBox(channelName));
-                wrongType = true;
+
             }
 
             return msg;
@@ -290,9 +290,7 @@ namespace zwoBot.Classes
             }
             catch
             {
-                if (!follow)
-                    // If someone placed an unknown channel for both Twitch + Hitbox
-                    msg.Add(channelName + " 4 does not exist1.");
+
             }
 
             foreach (string n in msg)
@@ -301,7 +299,7 @@ namespace zwoBot.Classes
             return Success;
         }
 
-        public List<string> CheckFollowers()
+        public List<string> CheckFollowers(ref string offline)
         {
             string api = "https://api.hitbox.tv/media/live/" + channelName;
             WebClient web = new WebClient();
@@ -314,6 +312,9 @@ namespace zwoBot.Classes
 
                 StreamData(data);
 
+                if (streamCreated == String.Empty)
+                    return msg;
+
                 // Stream is Online
                 if (data["livestream"][0]["media_is_live"].ToString() == "1")
                 {
@@ -321,6 +322,14 @@ namespace zwoBot.Classes
                     {
                         msg.Add("1" + displayName + " is 3online 1and is streaming at 6"
                             + url + " 1( " + viewers + " viewer(s), streaming for : ");
+
+                        var result = DateTime.UtcNow - DateTime.Parse(streamCreated);
+                        if (result.Hours > 0)
+                            msg[0] += result.Hours + " hours " + result.Minutes + " minutes " + result.Seconds + " seconds.";
+                        else if (result.Minutes > 0)
+                            msg[0] += result.Minutes + " minutes " + result.Seconds + " seconds.";
+                        else if (result.Seconds > 0)
+                            msg[0] += result.Seconds + " seconds.";
 
                         // In order to avoid duplicate messages for Online streams
                         isOnlineMsg = true;
@@ -330,26 +339,32 @@ namespace zwoBot.Classes
                             bootUp = true;
                     }
                 }
-                else if (data["livestream"][0]["media_is_live"].ToString() != "1")
+                else if (data["livestream"][0]["media_is_live"].ToString() == "0")
                 {
                     if (isOnlineMsg || !bootUp)
                     {
                         // In order to avoid duplicate messages for Offline streams
                         isOnlineMsg = false;
-                        msg.Add(channelName + " is 4offline. It was live for ");
 
                         if (!bootUp)
+                        {
                             bootUp = true;
+                            offline += " " + channelName;
+                        }
+                        else
+                        {
+                            msg.Add(channelName + " is 4offline. It was live for ");
+
+                            var result = DateTime.UtcNow - DateTime.Parse(streamCreated);
+                            if (result.Hours > 0)
+                                msg[0] += result.Hours + " hours " + result.Minutes + " minutes " + result.Seconds + " seconds.";
+                            else if (result.Minutes > 0)
+                                msg[0] += result.Minutes + " minutes " + result.Seconds + " seconds.";
+                            else if (result.Seconds > 0)
+                                msg[0] += result.Seconds + " seconds.";
+                        }
                     }
                 }
-
-                var result = DateTime.UtcNow - DateTime.Parse(streamCreated);
-                if (result.Hours > 0)
-                    msg[0] += result.Hours + " hours " + result.Minutes + " minutes " + result.Seconds + " seconds." + " )";
-                else if (result.Minutes > 0)
-                    msg[0] += result.Minutes + " minutes " + result.Seconds + " seconds." + " )";
-                else if (result.Seconds > 0)
-                    msg[0] += result.Seconds + " seconds." + " )";
             }
             catch
             {

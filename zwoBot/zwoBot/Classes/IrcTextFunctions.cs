@@ -76,11 +76,11 @@ namespace zwoBot.Classes
             // Check the status of a Twitch.TV Channel
             if (message[0] == "!stats")
             {
-                Twitch twitch = new Twitch(message[1]);
-                if (!twitch.CheckStream(_client, _channel, false))
+                HitBox hitbox = new HitBox(message[1]);
+                if (!hitbox.CheckStream(_client, _channel, false))
                 {
-                    HitBox hitbox = new HitBox(message[1]);
-                    hitbox.CheckStream(_client, _channel, false);
+                    Twitch twitch = new Twitch(message[1]);
+                    twitch.CheckStream(_client, _channel, false);
                 }
             }
             // Follow a channel

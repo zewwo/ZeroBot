@@ -6,9 +6,9 @@
 // zwoBot.resx
 // Description: Connect to an IRC server and perform various functions
 //              based on the IRC chat.
-// Version: 1.9
+// Version: 1.9.1
 // Date Created: 02.28.15
-// Updated Date: 04.13.15
+// Updated Date: 04.16.15
 // Author: Kevin Nguyen 
 //*********************************************************************
 
@@ -36,10 +36,11 @@ namespace zwoBot
     {
         private delegate void _delString(string s);
 
-        private bool isTest = false;
+        private bool isTest = true;
         private string _server;
         private string _channel;
         private List<string> _following = new List<string>();
+        private List<string> _service = new List<string>();
         private IrcClient _client;
         private Thread _checkFollowers;
 
@@ -69,7 +70,7 @@ namespace zwoBot
             }
 
             _client = new IrcClient(_server);
-            _client.Nick = "bibbyIsBack";
+            _client.Nick = "bestBot";
             _client.AltNick = "zwoBawt";
 
             ChannelEvents();
@@ -84,8 +85,8 @@ namespace zwoBot
         {
             StreamWriter writer = new StreamWriter("following.txt");
 
-            foreach (string n in _following)
-                writer.WriteLine(n);
+            for (int i = 0; i < _following.Count ; ++i)
+                writer.WriteLine(_following[i] + " " + _service[i]);
 
             writer.Flush();
             writer.Close();
@@ -112,7 +113,9 @@ namespace zwoBot
 
             while (following != null)
             {
-                _following.Add(following.ToLower());
+                var n = following.Split(' ');
+                _following.Add(n[0]);
+                _service.Add(n[1]);
                 following = reader.ReadLine();
             }
 
@@ -222,9 +225,9 @@ namespace zwoBot
         //*********************************************************************
         private void OnLoadCheck()
         {
-            _checkFollowers = new Thread(new ParameterizedThreadStart(CheckFollowers));
+            _checkFollowers = new Thread( () => CheckFollowers(_following, _service));
             _checkFollowers.IsBackground = true;
-            _checkFollowers.Start(_following);
+            _checkFollowers.Start();
 
             string text = "";
             AddToChat("<" + _client.Nick + "> : " + text);
@@ -235,26 +238,32 @@ namespace zwoBot
         // Method: private void CheckFollowers(object obj)
         // Purpose: Check the follow list for availability
         //*********************************************************************
-        private void CheckFollowers(object obj)
+        private void CheckFollowers(List<string> following, List<string> service)
         {
             bool isBoot = false;
 
-            List<string> following = (List<string>)obj;
             List<StreamInfo> ch = new List<StreamInfo>();
 
             string pastTimeStamp = DateTime.Now.ToString("hh:mm");
 
-            // Place all streams from the follower list into a Twitch only List
-            foreach (string n in following)
+            for (int i = 0; i < following.Count; ++i)
             {
-                Twitch channel = new Twitch(n);
-                ch.Add(channel);
+                if (service[i] == "hb")
+                {
+                    HitBox channel = new HitBox(following[i]);
+                    ch.Add(channel);
+                }
+                else if (service[i] == "tw")
+                {
+                    Twitch channel = new Twitch(following[i]);
+                    ch.Add(channel);
+                }
             }
 
             while (true)
             {
                 string timestamp = DateTime.Now.ToString("hh:mm");
-                string offlineTwitch = "";
+                string offline = "";
 
                 if (timestamp != pastTimeStamp || !isBoot)
                 {
@@ -266,26 +275,24 @@ namespace zwoBot
                     {
                         List<string> msg = new List<string>();
 
-                        if (ch[i] is Twitch)
-                        {
-                            var channel = ch[i] as Twitch;
-                            msg = channel.CheckFollowers(ref offlineTwitch, ref ch);
-                        }
-                        else if (ch[i] is HitBox)
+                        if (ch[i] is HitBox)
                         {
                             var channel = ch[i] as HitBox;
-                            msg = channel.CheckFollowers();
+                            msg = channel.CheckFollowers(ref offline);
+                        }
+                        else if (ch[i] is Twitch)
+                        {
+                            var channel = ch[i] as Twitch;
+                            msg = channel.CheckFollowers(ref offline);
                         }
 
                         foreach (string n in msg)
                             Invoke(new _delString(InvokeSendChat), n);
                     }
 
-                    ch.RemoveAll((A) => A.wrongType);
-
                     // Output Offline Streams from Twitch from Boot
-                    if (offlineTwitch != String.Empty)
-                        Invoke(new _delString(InvokeSendChat), "4OFFLINE 1:" + offlineTwitch);
+                    if (offline != String.Empty)
+                        Invoke(new _delString(InvokeSendChat), "4OFFLINE 1:" + offline);
                 }
             }
         }
