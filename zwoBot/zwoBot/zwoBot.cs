@@ -48,7 +48,7 @@ namespace zwoBot
     {
         private delegate void _delString(string s);
         private volatile bool _closeThread = false;
-        private bool isTest = true;
+        private bool isTest = false;
         private string _server;
         private string _channel;
         private List<string> _following = new List<string>();
