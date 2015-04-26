@@ -30,7 +30,7 @@ namespace zwoBot.Classes
 
         public abstract bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline);
 
-        protected abstract void StreamData(JObject data);
+        protected virtual void StreamData(JObject data) { }
     }
 
     class Twitch : StreamInfo
@@ -38,6 +38,10 @@ namespace zwoBot.Classes
         public Twitch(string channelName)
             : base(channelName) { }
 
+        //*********************************************************************
+        // Method: protected override void StreamData(JObject data)
+        // Purpose: Populates the attributes with data
+        //*********************************************************************
         protected override void StreamData(JObject data)
         {
             displayName = data["stream"]["channel"]["display_name"].ToString();
@@ -48,6 +52,10 @@ namespace zwoBot.Classes
             streamCreated = data["stream"]["created_at"].ToString();
         }
 
+        //*********************************************************************
+        // Method: public override bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline)
+        // Purpose: Check a stream's availability
+        //*********************************************************************
         public override bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline)
         {           
             bool isExists = false;
@@ -115,6 +123,10 @@ namespace zwoBot.Classes
             return isExists;
         }
 
+        //*********************************************************************
+        // Method: public List<string> CheckFollowers(ref string offline)
+        // Purpose: Periodically check a stream's availability in a Thread
+        //*********************************************************************
         public List<string> CheckFollowers(ref string offline)
         {
             string api = "https://api.twitch.tv/kraken/streams/" + channelName;
@@ -182,6 +194,10 @@ namespace zwoBot.Classes
             return msg;
         }
 
+        //*********************************************************************
+        // Method: public List<string> TopFiveGames()
+        // Purpose: Output the top five games on Twitch.TV
+        //*********************************************************************
         public List<string> TopFiveGames()
         {
             List<string> topGames = new List<string>();
@@ -211,6 +227,10 @@ namespace zwoBot.Classes
             return topGames;
         }
 
+        //*********************************************************************
+        // Method: public List<string> TopFiveChannels(string game)
+        // Purpose: Output the top five currently watched channels for a game on Twitch.TV
+        //*********************************************************************
         public List<string> TopFiveChannels(string game)
         {
             List<string> topChannels = new List<string>();
@@ -247,6 +267,10 @@ namespace zwoBot.Classes
         public HitBox(string channelName)
             : base(channelName) { }
 
+        //*********************************************************************
+        // Method: protected override void StreamData(JObject data)
+        // Purpose: Populates the attributes with data
+        //*********************************************************************
         protected override void StreamData(JObject data)
         {
             displayName = data["livestream"][0]["media_user_name"].ToString();
@@ -256,6 +280,10 @@ namespace zwoBot.Classes
             streamCreated = data["livestream"][0]["media_live_since"].ToString();
         }
 
+        //*********************************************************************
+        // Method: public override bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline)
+        // Purpose: Check a stream's availability
+        //*********************************************************************
         public override bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline)
         {
             bool isExists = false;
@@ -308,6 +336,10 @@ namespace zwoBot.Classes
             return isExists;
         }
 
+        //*********************************************************************
+        // Method: public List<string> CheckFollowers(ref string offline)
+        // Purpose: Periodically check a stream's availability in a Thread
+        //*********************************************************************
         public List<string> CheckFollowers(ref string offline)
         {
             string api = "https://api.hitbox.tv/media/live/" + channelName;

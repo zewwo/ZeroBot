@@ -4,13 +4,25 @@
 // zwoBot.cs
 // zwoBot.Designer.cs
 // zwoBot.resx
+// IrcClient.cs
+// IrcTextFunctions.cs
+// StreamInfo.cs
+// BlizzardInfo.cs
 // Description: Connect to an IRC server and perform various functions
 //              based on the IRC chat.
-// Version: 1.9.2
+// Version: 1.9.3
 // Date Created: 02.28.15
 // Updated Date: 04.25.15
 // Author: Kevin Nguyen 
 //*********************************************************************
+
+// ********************************************************************
+//                          WEB API LIST
+// Twitch.TV - https://github.com/justintv/Twitch-API
+// Hitbox.TV - http://developers.hitbox.tv/
+// Blizzard - https://dev.battle.net/
+// Dota 2 - 
+// ********************************************************************
 
 using System;
 using System.Collections.Generic;
@@ -35,8 +47,8 @@ namespace zwoBot
     public partial class zwoBot : Form
     {
         private delegate void _delString(string s);
-
-        private bool isTest = false;
+        private volatile bool _closeThread = false;
+        private bool isTest = true;
         private string _server;
         private string _channel;
         private List<string> _following = new List<string>();
@@ -49,57 +61,62 @@ namespace zwoBot
             InitializeComponent();
         }
 
-        #region GUI Functions
-        // Connect to an IRC Server and initialize event handlers for chat
-        // Side Effects: Make the TextBox read only
-        private void zwoBot_Load(object sender, EventArgs e)
+        private void UI_B_Connect_Click(object sender, EventArgs e)
         {
-            UI_RTB_Chat.ReadOnly = true;
-
-            LoadFollowers();
-
-            if (isTest)
+            if (UI_B_Connect.Text == "Connect")
             {
-                _server = "underworld1.no.quakenet.org";
-                _channel = "#zwoBot";
+                if (isTest)
+                {
+                    _server = "underworld1.no.quakenet.org";
+                    _channel = "#zwoBot";
+                }
+                else
+                {
+                    _server = "blacklotus.ca.us.quakenet.org";
+                    _channel = UI_TB_Channel.Text;
+                }
+
+                _client = new IrcClient(_server);
+                _client.Nick = UI_TB_Nick.Text;
+                _client.AltNick = UI_TB_AltNick.Text;
+
+                _closeThread = false;
+                UI_B_Connect.Enabled = false;
+                UI_TB_Channel.Enabled = false;
+                UI_TB_AltNick.Enabled = false;
+                UI_TB_Nick.Enabled = false;
+
+                LoadFollowers();
+                ChannelEvents();
+                // Connect to server at their port
+                _client.Connect();
             }
             else
             {
-                _server = "blacklotus.ca.us.quakenet.org";
-                _channel = "#teamfs";
+                StreamWriter writer = new StreamWriter("following.txt");
+
+                for (int i = 0; i < _following.Count; ++i)
+                    writer.WriteLine(_following[i] + " " + _service[i]);
+
+                writer.Flush();
+                writer.Close();
+
+                _client.SendMessage(_channel, "!mute");
+
+                _service.Clear();
+                _following.Clear();
+
+                UI_B_Connect.Text = "Connect";
+                UI_L_Connected.Text = "Not Connected";
+                UI_L_Connected.ForeColor = System.Drawing.Color.Red;
+                UI_TB_Channel.Enabled = true;
+                UI_TB_AltNick.Enabled = true;
+                UI_TB_Nick.Enabled = true;
+
+                CloseThread();
+                _client.Disconnect();
             }
-
-            _client = new IrcClient(_server);
-            _client.Nick = "beta000";
-            _client.AltNick = "zwoBawt";
-
-            ChannelEvents();
-
-            // Connect to server at their port
-            _client.Connect();
         }
-
-        // Close the connection between the application and the IRC server
-        // Side Effects: Save the followers list to the provided text file
-        private void zwoBot_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            StreamWriter writer = new StreamWriter("following.txt");
-
-            for (int i = 0; i < _following.Count ; ++i)
-                writer.WriteLine(_following[i] + " " + _service[i]);
-
-            writer.Flush();
-            writer.Close();
-        }
-
-        // Add text to chat
-        // Side Effects: Scroll all the way down
-        private void AddToChat(string msg)
-        {
-            UI_RTB_Chat.AppendText("[" + DateTime.Now.ToString("hh:mm tt") + "] " + msg + "\n");
-            UI_RTB_Chat.ScrollToCaret();
-        }
-        #endregion
 
         //*********************************************************************
         // Method:  private void LoadFollowers()
@@ -128,16 +145,9 @@ namespace zwoBot
         //*********************************************************************
         private void ChannelEvents()
         {
+            _client.OnConnect += client_OnConnect;
             _client.ChannelMessage += client_ChannelMessage;
             _client.ExceptionThrown += client_ExceptionThrown;
-            _client.NoticeMessage += client_NoticeMessage;
-            _client.OnConnect += client_OnConnect;
-            _client.PrivateMessage += client_PrivateMessage;
-            _client.ServerMessage += client_ServerMessage;
-            _client.UpdateUsers += client_UpdateUsers;
-            _client.UserJoined += client_UserJoined;
-            _client.UserLeft += client_UserLeft;
-            _client.UserNickChange += client_UserNickChange;
         }
 
         #region Listeners
@@ -147,67 +157,21 @@ namespace zwoBot
         {
             _client.JoinChannel(_channel);
             _client.SendMessage(_channel, "!mute");
+
+            UI_B_Connect.Enabled = true;
+            UI_B_Connect.Text = "Disconnect";
+            UI_L_Connected.Text = "Connected";
+            UI_L_Connected.ForeColor = System.Drawing.Color.Green;
+
             OnLoadCheck();
-        }
-
-        // Add the user to the listbox if someone joins the channel
-        // Side Effects: Nothing
-        private void client_UserJoined(object sender, UserJoinedEventArgs e)
-        {
-            UI_LB_Users.Items.Add(e.User.Substring(1, e.User.IndexOf("!") - 1));
-        }
-
-        // Remove the user from the list box if someone leave the channel
-        // Side Effects: Nothing
-        private void client_UserLeft(object sender, UserLeftEventArgs e)
-        {
-            UI_LB_Users.Items.Remove(e.User);
-        }
-
-        // Change the user's nickname if they do
-        // Side Effects: Nothing
-        private void client_UserNickChange(object sender, UserNickChangedEventArgs e)
-        {
-            UI_LB_Users.Items[UI_LB_Users.Items.IndexOf(e.Old)] = e.New;
-        }
-
-        // Update the user list
-        //Side Effects: Nothing
-        private void client_UpdateUsers(object sender, UpdateUsersEventArgs e)
-        {
-            UI_LB_Users.Items.Clear();
-            UI_LB_Users.Items.AddRange(e.UserList);
         }
 
         // Add all channel messages to the chat
         // Side Effects: Nothing
         private void client_ChannelMessage(object sender, ChannelMessageEventArgs e)
         {
-            AddToChat("<" + e.From + "> : " + e.Message);
-
             IrcTextFunctions textFunctions = new IrcTextFunctions(_client, _channel, _following, _service);
             textFunctions.ChatFunctions(e.Message, e.From);
-        }
-
-        // Add all server messages to the chat
-        // Side Effects: Nothing
-        private void client_ServerMessage(object sender, StringEventArgs e)
-        {
-            AddToChat(e.Result);
-        }
-
-        // Add all private messages to chat
-        // Side Effects: Nothing
-        private void client_PrivateMessage(object sender, PrivateMessageEventArgs e)
-        {
-            AddToChat("PM FROM " + e.From + ": " + e.Message);
-        }
-
-        // Add all notice messages to the chat
-        // Side Effects: Nothing
-        private void client_NoticeMessage(object sender, NoticeMessageEventArgs e)
-        {
-            AddToChat("NOTICE FROM " + e.From + ": " + e.Message);
         }
 
         // Show any exceptions that occured
@@ -230,7 +194,6 @@ namespace zwoBot
             _checkFollowers.Start();
 
             string text = "";
-            AddToChat("<" + _client.Nick + "> : " + text);
             _client.SendMessage(_channel, text);
         }
 
@@ -260,7 +223,7 @@ namespace zwoBot
                 }
             }
 
-            while (true)
+            while (!_closeThread)
             {
                 string timestamp = DateTime.Now.ToString("hh:mm");
                 string offline = "";
@@ -303,17 +266,13 @@ namespace zwoBot
         //*********************************************************************
         private void InvokeSendChat(string n)
         {
-            AddToChat("<" + _client.Nick + "> : " + n);
             _client.SendMessage(_channel, n);
         }
-        #endregion
 
-        // ********************************************************************
-        //                          WEB API LIST
-        // Twitch.TV - https://github.com/justintv/Twitch-API
-        // Hitbox.TV - http://developers.hitbox.tv/
-        // Blizzard - https://dev.battle.net/
-        // Dota 2 - 
-        // ********************************************************************
+        private void CloseThread()
+        {
+            _closeThread = true;
+        }
+        #endregion
     }
 }

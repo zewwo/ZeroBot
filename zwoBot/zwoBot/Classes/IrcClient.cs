@@ -228,7 +228,7 @@ namespace TechLifeForum
             {
                 if (irc.Connected)
                 {
-                    Send("QUIT Client Disconnected: http://tech.reboot.pro");
+                    Send("QUIT Client Disconnected: ");
                 }
                 irc = null;
             }

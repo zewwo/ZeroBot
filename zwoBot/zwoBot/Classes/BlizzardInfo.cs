@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using TechLifeForum;
+using System.Configuration;
 
 namespace zwoBot.Classes
 {
     class BlizzardInfo
     {
-        protected readonly string BLIZZARD_API_KEY = "f56qqfrxy83eza8n348eqxzec7k9gpc4";
+        protected readonly string BLIZZARD_API_KEY = ConfigurationSettings.AppSettings["blizzard"];
         protected string name;
         protected string bclass;
         protected string level;
@@ -32,6 +33,10 @@ namespace zwoBot.Classes
             this.realm = realm;
         }
 
+        //*********************************************************************
+        // Method: public string ProgressionCheck()
+        // Purpose: Check the character's progression in the latest raid for a specific realm
+        //*********************************************************************
         public string ProgressionCheck()
         {
             string output = null;
@@ -90,6 +95,10 @@ namespace zwoBot.Classes
         public Diablo(string name)
             : base(name.Replace('#', '-')) { }
 
+        //*********************************************************************
+        // Method: public string ParagonChecks()
+        // Purpose: Check a character's non season and season paragon level
+        //*********************************************************************
         public string ParagonChecks()
         {
             string output = null;
