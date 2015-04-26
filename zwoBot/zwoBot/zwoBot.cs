@@ -70,7 +70,7 @@ namespace zwoBot
             }
 
             _client = new IrcClient(_server);
-            _client.Nick = "beta";
+            _client.Nick = "beta000";
             _client.AltNick = "zwoBawt";
 
             ChannelEvents();

@@ -101,9 +101,15 @@ namespace zwoBot.Classes
             }
             catch
             {
+                isExists = false;
+
                 if (!follow)
-                    // If someone placed an unknown channel for both Twitch + Hitbox
+                {    // If someone placed an unknown channel for both Twitch + Hitbox
                     msg.Add(channelName + " 4 does not exist1.");
+                   
+                    foreach (string n in msg)
+                        _client.SendMessage(ircChannel, n);
+                }
             }
 
             return isExists;
@@ -296,7 +302,7 @@ namespace zwoBot.Classes
             }
             catch
             {
-
+                isExists = false;
             }
 
             return isExists;

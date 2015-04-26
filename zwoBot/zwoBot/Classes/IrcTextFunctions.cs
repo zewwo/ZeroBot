@@ -83,14 +83,11 @@ namespace zwoBot.Classes
                 bool isOff = false;
                 bool isExist = hitbox.CheckStream(_client, _channel, false, ref isOff);
 
-                if (isExist && isOff)
-                {
-                    Twitch twitch = new Twitch(message[1]);
-                    isExist = twitch.CheckStream(_client, _channel, false, ref isOff);
+                Twitch twitch = new Twitch(message[1]);
+                isExist = twitch.CheckStream(_client, _channel, false, ref isOff);
 
-                    if (isExist && isOff)
-                        _client.SendMessage(_channel, message[1] + " is 13offline1. ");
-                }
+                if (isExist && isOff)
+                    _client.SendMessage(_channel, message[1] + " is 13offline1. ");
             }
 
             if (message[0] == "!paragon")
