@@ -28,7 +28,7 @@ namespace zwoBot.Classes
             this.channelName = channelName;
         }
 
-        public abstract bool CheckStream(IrcClient _client, string ircChannel, bool follow);
+        public abstract bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline);
 
         protected abstract void StreamData(JObject data);
     }
@@ -48,9 +48,9 @@ namespace zwoBot.Classes
             streamCreated = data["stream"]["created_at"].ToString();
         }
 
-        public override bool CheckStream(IrcClient _client, string ircChannel, bool follow)
+        public override bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline)
         {           
-            bool Success = false;
+            bool isExists = false;
             string api = "https://api.twitch.tv/kraken/streams/" + channelName;
             WebClient web = new WebClient();
 
@@ -63,9 +63,11 @@ namespace zwoBot.Classes
                 {
                     // Stream is offline
                     if (data["stream"].ToString() == String.Empty)
-                        msg.Add(channelName + " is 13offline1. ");
+                        isOffline = true;
                     else
                     {
+                        isOffline = false;
+
                         StreamData(data);
 
                         // No Zyori allowed
@@ -89,10 +91,13 @@ namespace zwoBot.Classes
                             else if (result.Seconds > 0)
                                 msg[1] += result.Minutes + " minutes " + result.Seconds + " seconds" + " ) ";
                         }
+
+                        foreach (string n in msg)
+                            _client.SendMessage(ircChannel, n);
                     }
                 }
 
-                Success = true;
+                isExists = true;
             }
             catch
             {
@@ -101,10 +106,7 @@ namespace zwoBot.Classes
                     msg.Add(channelName + " 4 does not exist1.");
             }
 
-            foreach (string n in msg)
-                _client.SendMessage(ircChannel, n);
-
-            return Success;
+            return isExists;
         }
 
         public List<string> CheckFollowers(ref string offline)
@@ -248,9 +250,9 @@ namespace zwoBot.Classes
             streamCreated = data["livestream"][0]["media_live_since"].ToString();
         }
 
-        public override bool CheckStream(IrcClient _client, string ircChannel, bool follow)
+        public override bool CheckStream(IrcClient _client, string ircChannel, bool follow, ref bool isOffline)
         {
-            bool Success = false;
+            bool isExists = false;
             string api = "https://api.hitbox.tv/media/live/" + channelName;
             WebClient web = new WebClient();
 
@@ -280,23 +282,24 @@ namespace zwoBot.Classes
                             detailed += result.Minutes + " minutes " + result.Seconds + " seconds." + " )";
                         else if (result.Seconds > 0)
                             detailed += result.Seconds + " seconds." + " )";
+
                         msg.Add(detailed);
+
+                        foreach (string n in msg)
+                            _client.SendMessage(ircChannel, n);
                     }
                     else
-                        msg.Add(channelName + " is 4offline.");
+                        isOffline = true;
                 }
 
-                Success = true;
+                isExists = true;
             }
             catch
             {
 
             }
 
-            foreach (string n in msg)
-                _client.SendMessage(ircChannel, n);
-
-            return Success;
+            return isExists;
         }
 
         public List<string> CheckFollowers(ref string offline)

@@ -16,12 +16,14 @@ namespace zwoBot.Classes
         public IrcClient _client { get; private set; }
         public string _channel { get; private set; }
         public List<string> _following { get; private set; }
+        public List<string> _service { get; private set; }
 
-        public IrcTextFunctions(IrcClient client, string channel, List<string> following)
+        public IrcTextFunctions(IrcClient client, string channel, List<string> following, List<string> service)
         {
             _client = client;
             _following = following;
             _channel = channel;
+            _service = service;
         }
 
         //*********************************************************************
@@ -46,6 +48,7 @@ namespace zwoBot.Classes
                     }
                 case 3:
                     {
+                        MessageThree(message, userSent);
                         break;
                     }
                 default:
@@ -77,24 +80,34 @@ namespace zwoBot.Classes
             if (message[0] == "!stats")
             {
                 HitBox hitbox = new HitBox(message[1]);
-                if (!hitbox.CheckStream(_client, _channel, false))
+                bool isOff = false;
+                bool isExist = hitbox.CheckStream(_client, _channel, false, ref isOff);
+
+                if (isExist && isOff)
                 {
                     Twitch twitch = new Twitch(message[1]);
-                    twitch.CheckStream(_client, _channel, false);
+                    isExist = twitch.CheckStream(_client, _channel, false, ref isOff);
+
+                    if (isExist && isOff)
+                        _client.SendMessage(_channel, message[1] + " is 13offline1. ");
                 }
             }
-            // Follow a channel
-            if (message[0] == "!follow" && userSent == "zwo")
-                Channel(message[1], true);
-            // Unfollow a channel
-            else if (message[0] == "!unfollow" && userSent == "zwo")
-                Channel(message[1], false);
 
             if (message[0] == "!paragon")
             {
                 Diablo diablo = new Diablo(message[1]);
                 _client.SendMessage(_channel, diablo.ParagonChecks());
             }
+        }
+
+        private void MessageThree(string[] message, string userSent)
+        {
+            // Follow a channel
+            if (message[0] == "!follow" && userSent == "zwo")
+                Channel(message[1], message[2], true);
+            // Unfollow a channel
+            else if (message[0] == "!unfollow" && userSent == "zwo")
+                Channel(message[1], message[2], false);
         }
 
         private void MessageX(string[] message, string userSent)
@@ -129,8 +142,7 @@ namespace zwoBot.Classes
                         _client.SendMessage(_channel, n);
                 }
             }
-        }
-        
+        }   
 
         //*********************************************************************
         // Method: private void BotCommands()
@@ -152,7 +164,7 @@ namespace zwoBot.Classes
         // Method:  private void Channel(string channel, bool follow)
         // Purpose: Add or Remove followers from the list
         //*********************************************************************
-        private void Channel(string channel, bool follow)
+        private void Channel(string channel, string stream, bool follow)
         {
             string text = null;
 
@@ -161,20 +173,28 @@ namespace zwoBot.Classes
                 // Stream isn't followed yet
                 if (!_following.Contains(channel.ToLower()))
                 {
-                    Twitch twitch = new Twitch(channel);
-                    bool checkTW = twitch.CheckStream(_client, _channel, follow);
-                    bool checkHB = false;
+                    bool isExist = false;
+                    bool placeholdr = false;
 
-                    // Check if the stream actually exists
-                    if (!checkTW)
+                    if (stream == "twitch")
+                    {
+                        Twitch twitch = new Twitch(channel);
+                        isExist = twitch.CheckStream(_client, _channel, follow, ref placeholdr);
+                    }
+                    else if (stream == "hitbox")
                     {
                         HitBox hitbox = new HitBox(channel);
-                        checkHB = hitbox.CheckStream(_client, _channel, follow);
+                        isExist = hitbox.CheckStream(_client, _channel, follow, ref placeholdr);
                     }
 
                     // Stream exists, add them
-                    if (checkTW || checkHB)
+                    if (isExist)
                     {
+                        if (stream == "twitch")
+                            _service.Add("tw");
+                        else if (stream == "hitbox")
+                            _service.Add("hb");
+
                         _following.Add(channel.ToLower());
                         text = channel + " has been added to the followers list.";
                     }
@@ -186,16 +206,30 @@ namespace zwoBot.Classes
             }
             else
             {
+                string str = null;
+
+                if (stream == "twitch")
+                    str = "tw";
+                else if (stream == "hitbox")
+                    str = "hb";
+
                 // Remove stream
                 if (_following.Contains(channel.ToLower()))
                 {
-                    _following.Remove(channel);
+                    int index = _following.IndexOf(channel);
 
-                    text = "Removed " + channel + " from the followers list.";
+                    if (_service[index] == str)
+                    {
+                        _following.Remove(channel);
+                        _service.RemoveAt(index);
+
+                        text = "Removed " + channel + " from the followers list.";
+                    }
+                    else
+                        text = channel + " is not in the followers list.";
                 }
                 else
                     text = channel + " is not in the followers list.";
-
             }
 
             _client.SendMessage(_channel, text);

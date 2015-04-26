@@ -6,9 +6,9 @@
 // zwoBot.resx
 // Description: Connect to an IRC server and perform various functions
 //              based on the IRC chat.
-// Version: 1.9.1
+// Version: 1.9.2
 // Date Created: 02.28.15
-// Updated Date: 04.16.15
+// Updated Date: 04.25.15
 // Author: Kevin Nguyen 
 //*********************************************************************
 
@@ -70,7 +70,7 @@ namespace zwoBot
             }
 
             _client = new IrcClient(_server);
-            _client.Nick = "bestBot";
+            _client.Nick = "beta";
             _client.AltNick = "zwoBawt";
 
             ChannelEvents();
@@ -185,7 +185,7 @@ namespace zwoBot
         {
             AddToChat("<" + e.From + "> : " + e.Message);
 
-            IrcTextFunctions textFunctions = new IrcTextFunctions(_client, _channel, _following);
+            IrcTextFunctions textFunctions = new IrcTextFunctions(_client, _channel, _following, _service);
             textFunctions.ChatFunctions(e.Message, e.From);
         }
 
