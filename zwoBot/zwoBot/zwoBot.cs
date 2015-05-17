@@ -10,7 +10,7 @@
 // BlizzardInfo.cs
 // Description: Connect to an IRC server and perform various functions
 //              based on the IRC chat.
-// Version: 1.9.3
+// Version: 1.9.4
 // Date Created: 02.28.15
 // Updated Date: 04.25.15
 // Author: Kevin Nguyen 
