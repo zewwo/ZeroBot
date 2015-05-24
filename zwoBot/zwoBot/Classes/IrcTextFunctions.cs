@@ -62,9 +62,9 @@ namespace zwoBot.Classes
 
         private void MessageOne(string[] message)
         {
-            if (message[0] == "!zwobot")
+            if (message[0].ToLower() == "!zwobot")
                 BotCommands();
-            if (message[0] == "!top5")
+            if (message[0].ToLower() == "!top5")
             {
                 Twitch twitch = new Twitch(null);
                 var games = twitch.TopFiveGames();
@@ -77,23 +77,21 @@ namespace zwoBot.Classes
         private void MessageTwo(string[] message, string userSent)
         {
             // Check the status of a Twitch.TV Channel
-            if (message[0] == "!stats")
+            if (message[0].ToLower() == "!stats")
             {
                 HitBox hitbox = new HitBox(message[1]);
-                bool isOff = false;
-                bool isExist = hitbox.CheckStream(_client, _channel, false, ref isOff);
+                bool isOffHB = false;
+                bool isOffTW = false;
+                bool isExist = hitbox.CheckStream(_client, _channel, false, ref isOffHB);
 
-                if (isExist && isOff)
-                {
-                    Twitch twitch = new Twitch(message[1]);
-                    isExist = twitch.CheckStream(_client, _channel, false, ref isOff);
+                Twitch twitch = new Twitch(message[1]);
+                isExist = twitch.CheckStream(_client, _channel, false, ref isOffTW);
 
-                    if (isExist && isOff)
-                        _client.SendMessage(_channel, message[1] + " is 13offline1. ");
-                }
+                if (isExist && isOffTW && isOffHB)
+                    _client.SendMessage(_channel, message[1] + " is 13offline1. ");
             }
 
-            if (message[0] == "!paragon")
+            if (message[0].ToLower() == "!paragon")
             {
                 Diablo diablo = new Diablo(message[1]);
                 _client.SendMessage(_channel, diablo.ParagonChecks());
@@ -112,10 +110,7 @@ namespace zwoBot.Classes
 
         private void MessageX(string[] message, string userSent)
         {
-            //if (message[0] == "!mute" && userSent != "whereIsBib")
-            //    _client.SendMessage(_channel, "!mute");
-
-            if (message[0] == "!wowprogress")
+            if (message[0].ToLower() == "!wowprogress")
             {
                 string realm = "";
                 for (int i = 2; i < message.Length; ++i)
@@ -127,7 +122,7 @@ namespace zwoBot.Classes
                     _client.SendMessage(_channel, warcraft.ProgressionCheck());
                 }
             }
-            else if (message[0] == "!game")
+            else if (message[0].ToLower() == "!game")
             {
                 string game = "";
                 for (int i = 1; i < message.Length; ++i)
