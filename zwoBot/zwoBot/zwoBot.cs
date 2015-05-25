@@ -10,9 +10,9 @@
 // BlizzardInfo.cs
 // Description: Connect to an IRC server and perform various functions
 //              based on the IRC chat.
-// Version: 1.9.4
+// Version: 1.9.5
 // Date Created: 02.28.15
-// Updated Date: 04.25.15
+// Updated Date: 05.24.15
 // Author: Kevin Nguyen 
 //*********************************************************************
 
@@ -101,8 +101,6 @@ namespace zwoBot
                 writer.Flush();
                 writer.Close();
 
-                _client.SendMessage(_channel, "!mute");
-
                 _service.Clear();
                 _following.Clear();
 
@@ -156,7 +154,6 @@ namespace zwoBot
         private void client_OnConnect(object sender, EventArgs e)
         {
             _client.JoinChannel(_channel);
-            _client.SendMessage(_channel, "!mute");
 
             UI_B_Connect.Enabled = true;
             UI_B_Connect.Text = "Disconnect";
