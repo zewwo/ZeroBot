@@ -104,6 +104,8 @@ namespace zwoBot
                 _service.Clear();
                 _following.Clear();
 
+                _client.SendMessage(_channel, "!mute");
+
                 UI_B_Connect.Text = "Connect";
                 UI_L_Connected.Text = "Not Connected";
                 UI_L_Connected.ForeColor = System.Drawing.Color.Red;
@@ -154,6 +156,7 @@ namespace zwoBot
         private void client_OnConnect(object sender, EventArgs e)
         {
             _client.JoinChannel(_channel);
+            _client.SendMessage(_channel, "!mute");
 
             UI_B_Connect.Enabled = true;
             UI_B_Connect.Text = "Disconnect";
